@@ -1,0 +1,6 @@
+dev:\
+    :datasize-cur=4096M:\
+    :datasize-max=infinity:\
+    :openfiles-cur=4096:\
+    :openfiles-max=8192:\
+    :tc=staff:

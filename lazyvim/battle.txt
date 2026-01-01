@@ -1,0 +1,72 @@
+node ~/.local/share/nvim/mason/packages/angular-language-server/node_modules/@angular/language-server/index.js \
+>   --stdio \
+>   --tsProbeLocations /home/marto/repos/angular/finances/node_modules \
+>   --ngProbeLocations /home/marto/repos/angular/finances/node_modules
+
+Works in the terminal:
+/usr/local/bin/node /home/marto/.local/share/nvim/mason/packages/angular-language-server/node_modules/@angular/language-server/index.js --stdio --tsProbeLocations /home/marto/repos/angular/finances/node_modules --ngProbeLocations /home/marto/repos/angular/finances/node_modules
+Does not work in nvim
+
+/usr/local/bin/node /home/marto/.local/share/nvim/mason/bin/ngserver --stdio --tsProbeLocations /home/marto/repos/angular/finances/node_modules --ngProbeLocations /home/marto/repos/angular/finances/node_modules
+
+The Linux command:
+node /home/marto/.local/share/nvim/mason/bin/ngserver --stdio --tsProbeLocations /home/marto/repos/angular/finances/node_modules --ngProbeLocations /home/marto/repos/angular/finances/node_modules
+
+Inside nvim:
+lua print(vim.inspect(require("lspconfig").get_active_client_by_name("angularls")))
+
+
+14:17:04 msg_show   print(vim.inspect(require("lspconfig").angularls.document_config.default_config.cmd)) { "ngserver", "--stdio", "--tsProbeLocations", "/home/marto/repos/angular/finances/node_modules", "--ngProbeLocations", "/home/marto/repos/angular/finances/node_modules", "--angularCoreVersion" }
+
+
+return {
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        angularls = {
+          -- You MUST specify the custom command to run ngserver
+          cmd = {
+            "/home/marto/.local/share/nvim/mason/bin/ngserver",
+            "--stdio",
+            "--tsProbeLocations",
+            "/home/marto/repos/angular/finances/node_modules",
+            "--ngProbeLocations",
+            "/home/marto/repos/angular/finances/node_modules",
+          },
+          on_new_config = function(new_config, _)
+            new_config.cmd_env = {
+              -- This makes sure node modules are resolved correctly
+              PATH = os.getenv("PATH"),
+              NODE_PATH = "/home/marto/repos/angular/finances/node_modules",
+            }
+          end,
+        },
+      },
+    },
+  },
+}
+
+After a fresh installation:
+
+   Warn  14:30:03 notify.warn LazyVim Mason package path not found for **angular-language-server**:
+- `/node_modules/@angular/language-server`
+You may need to force update the package.
+
+This also works inside .../finances:
+/home/marto/.local/share/nvim/mason/bin/ngserver --stdio --tsProbeLocations ./node_modules --ngProbeLocations ./node_modules
+
+
+Useful commands:
+1. 	:lua vim.lsp.set_log_level("debug")
+	:LspRestart
+	:LspLog
+
+2. ktrace -f ngserver.trace /home/marto/.local/share/nvim/mason/packages/angular-language-server/node_modules/.bin/ngserver --stdio \
+  --tsProbeLocations /home/marto/.local/share/nvim/mason/packages/angular-language-server/node_modules,/home/marto/repos/angular/finances/node_modules \
+  --ngProbeLocations /home/marto/.local/share/nvim/mason/packages/angular-language-server/node_modules/@angular/language-server/node_modules,/home/marto/repos/angular/finances/node_modules
+kdump -f ngserver.trace
+
+env TSS_LOG="-level verbose -file /tmp/tsserver.log" nvim /home/marto/repos/angular/finances/src/app/app.component.ts
+
+Vv78KUynTTGCaXyf_zBDTP

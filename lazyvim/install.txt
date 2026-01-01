@@ -1,0 +1,60 @@
+1. Tell lazyvim not to install marksman (needed for markdown)
+2. Tell lazyvim to use lua-ls, i.e. the lua-language-server from the system and not via mason
+3. Tell lazyvim to use texlab for tex files
+4. Install ast-grep
+5. Install a latex formatter such as latexindent? tex-fmt
+6. Make mason forget about the failed installs of shfmt and stylua
+7. Install rust nightly: https://www.openbsd-desktop.rocks/posts/update-rust/, https://github.com/semarie/build-rust
+export PATH=$HOME/build/build-rust/install_dir/nightly/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/build/build-rust/install_dir/nightly/lib:$LD_LIBRARY_PATH
+8. enable snacks.scroll, snacks.words, snacks.image and snacks.picker
+9. luasnip WARNING For Variable/Placeholder-transformations, luasnip requires
+      the jsregexp library. See `:help |luasnip-lsp-snippets-transformations`| for advice
+10.mmdc?
+11. biber?: https://github.com/anoduck/Biber-OpenBSD
+12. conform.nvim report ~
+- Log file: /home/marto/.local/state/nvim/conform.log
+- ¿ WARNING fish_indent unavailable: Command 'fish_indent' not found
+- ¿ WARNING prettier unavailable: Condition failed
+13. cd .local/share/nvim/lazy/blink.cmp; cargo build --release
+14. cd ~/.local/share/nvim/lazy/LuaSnip
+15. hg_cmd is missing but can be safely ignored as it is about mercurial
+gmake install_jsregexp
+
+
+Not sure if needed: Prevent Updates from Breaking the Build: By default, when Lazy.nvim updates LuaSnip, it may overwrite the compiled library. To prevent this, ensure your lua/plugins/ configuration explicitly includes the build command so Lazy.nvim re-compiles it automatically after an update:
+{
+  "L3MON4D3/LuaSnip",
+  build = "gmake install_jsregexp",
+}
+
+
+False positive LazyHealth and checkhealth warnings:
+1. WARNING prettier unavailable: Condition failed
+2. hg_cmd mercurial
+
+Useful plugins (apart from the obvious ones):
+
+1. coding.luasnip: Very useful. Provides snippet expansion via LuaSnip, works well with nvim-cmp.
+
+2. coding.mini-comment: Lightweight commenting plugin, integrates with Treesitter. Handy for TS/Angular and LaTeX % comments.
+
+3. coding.neogen: Generates documentation for functions/classes. Useful if you like JSDoc or typed comments.
+
+4. editor.aerial: Symbol outline for classes/functions. Very useful for large TS/Angular projects.
+
+5. editor.illuminate: Highlights other instances of the word under cursor. Useful.
+
+6. editor.harpoon2: Quick file bookmarking. Optional, useful for personal workflow.
+
+7. editor.navic: Shows code context in statusline (e.g., in Lualine). Useful.
+
+8. editor.refactoring: Provides refactor actions for TS/JS. Definitely useful.
+
+9. editor.snacks.picker
+
+11. ui.mini-indentscope: Highlights current scope. Useful.
+
+12. ui.treesitter-context: Shows current function/class at top. Very useful.
+
+13. util.project: Project management. Useful.
