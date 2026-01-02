@@ -8,3 +8,5 @@ export PATH HOME TERM
 export LIBCLANG_PATH=/usr/local/llvm21/lib
 
 export LD_LIBRARY_PATH=$HOME/build/build-rust/install_dir/nightly/lib:$LD_LIBRARY_PATH
+
+export ENV=$HOME/.kshrc
