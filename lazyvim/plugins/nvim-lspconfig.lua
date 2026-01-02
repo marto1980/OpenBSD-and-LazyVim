@@ -17,6 +17,13 @@ return {
         },
 
         texlab = {
+          settings = {
+            texlab = {
+              diagnostics = {
+                ignoredPatterns = { "Undefined reference" },
+              },
+            },
+          },
           mason = false,
           cmd = { "/home/marto/.bin/texlab" },
           on_attach = function(client, _)

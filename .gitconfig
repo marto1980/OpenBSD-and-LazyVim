@@ -1,6 +1,10 @@
 [alias]
   s = status
-	co = checkout
+  co = checkout
   a = add
   c = commit
   b = branch
+  l = log
+[user]
+	name = Martin Ivanov
+	email = marto1980@gmail.com
