@@ -19,6 +19,7 @@ return {
         texlab = {
           settings = {
             texlab = {
+              chktex = { onOpenAndSave = true, onEdit = true },
               diagnostics = {
                 ignoredPatterns = { "Undefined reference" },
               },
@@ -30,6 +31,15 @@ return {
             client.server_capabilities.documentFormattingProvider = false
             client.server_capabilities.documentRangeFormattingProvider = false
           end,
+        },
+      },
+      -- This section directly overrides LazyVim's diagnostic defaults
+      diagnostics = {
+        virtual_text = {
+          source = "always", -- Shows source in the line (gutter/end of line)
+        },
+        float = {
+          source = "always", -- Shows source in the hover window (leader + cd)
         },
       },
     },
