@@ -34,6 +34,7 @@ False positive LazyHealth and checkhealth warnings:
 2. hg_cmd mercurial
 
 Useful plugins (apart from the obvious ones):
+vimtex
 
 1. coding.luasnip: Very useful. Provides snippet expansion via LuaSnip, works well with nvim-cmp.
 
