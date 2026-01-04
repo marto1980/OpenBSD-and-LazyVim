@@ -18,8 +18,8 @@ export LD_LIBRARY_PATH=$HOME/build/build-rust/install_dir/nightly/lib:$LD_LIBRAR
 - ¿ WARNING prettier unavailable: Condition failed
 13. cd .local/share/nvim/lazy/blink.cmp; cargo build --release
 14. cd ~/.local/share/nvim/lazy/LuaSnip
-15. hg_cmd is missing but can be safely ignored as it is about mercurial
 gmake install_jsregexp
+15. hg_cmd is missing but can be safely ignored as it is about mercurial
 
 
 Not sure if needed: Prevent Updates from Breaking the Build: By default, when Lazy.nvim updates LuaSnip, it may overwrite the compiled library. To prevent this, ensure your lua/plugins/ configuration explicitly includes the build command so Lazy.nvim re-compiles it automatically after an update:
