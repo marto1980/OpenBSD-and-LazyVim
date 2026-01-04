@@ -20,7 +20,7 @@ export LD_LIBRARY_PATH=$HOME/build/build-rust/install_dir/nightly/lib:$LD_LIBRAR
 14. cd ~/.local/share/nvim/lazy/LuaSnip
 gmake install_jsregexp
 15. hg_cmd is missing but can be safely ignored as it is about mercurial
-
+16. Update latexmk to the latest version
 
 Not sure if needed: Prevent Updates from Breaking the Build: By default, when Lazy.nvim updates LuaSnip, it may overwrite the compiled library. To prevent this, ensure your lua/plugins/ configuration explicitly includes the build command so Lazy.nvim re-compiles it automatically after an update:
 {
@@ -34,28 +34,28 @@ False positive LazyHealth and checkhealth warnings:
 2. hg_cmd mercurial
 
 Useful plugins (apart from the obvious ones):
-vimtex
+1. lang.text (vimtex)
 
-1. coding.luasnip: Very useful. Provides snippet expansion via LuaSnip, works well with nvim-cmp.
+2. coding.luasnip: Very useful. Provides snippet expansion via LuaSnip, works well with nvim-cmp.
 
-2. coding.mini-comment: Lightweight commenting plugin, integrates with Treesitter. Handy for TS/Angular and LaTeX % comments.
+3. coding.mini-comment: Lightweight commenting plugin, integrates with Treesitter. Handy for TS/Angular and LaTeX % comments.
 
-3. coding.neogen: Generates documentation for functions/classes. Useful if you like JSDoc or typed comments.
+4. coding.neogen: Generates documentation for functions/classes. Useful if you like JSDoc or typed comments.
 
-4. editor.aerial: Symbol outline for classes/functions. Very useful for large TS/Angular projects.
+5. editor.aerial: Symbol outline for classes/functions. Very useful for large TS/Angular projects.
 
-5. editor.illuminate: Highlights other instances of the word under cursor. Useful.
+6. editor.illuminate: Highlights other instances of the word under cursor. Useful.
 
-6. editor.harpoon2: Quick file bookmarking. Optional, useful for personal workflow.
+7. editor.harpoon2: Quick file bookmarking. Optional, useful for personal workflow.
 
-7. editor.navic: Shows code context in statusline (e.g., in Lualine). Useful.
+8. editor.navic: Shows code context in statusline (e.g., in Lualine). Useful.
 
-8. editor.refactoring: Provides refactor actions for TS/JS. Definitely useful.
+9. editor.refactoring: Provides refactor actions for TS/JS. Definitely useful.
 
-9. editor.snacks.picker
+10. editor.snacks.picker
 
-11. ui.mini-indentscope: Highlights current scope. Useful.
+12. ui.mini-indentscope: Highlights current scope. Useful.
 
-12. ui.treesitter-context: Shows current function/class at top. Very useful.
+13. ui.treesitter-context: Shows current function/class at top. Very useful.
 
-13. util.project: Project management. Useful.
+14. util.project: Project management. Useful.
