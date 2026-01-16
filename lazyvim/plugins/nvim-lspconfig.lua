@@ -32,6 +32,16 @@ return {
             client.server_capabilities.documentRangeFormattingProvider = false
           end,
         },
+        ltex_plus = {
+          mason = false, -- Prevent Mason from trying to install it
+          cmd = { "/home/marto/.bin/ltex-ls-plus" },
+          -- Additional settings (optional)
+          settings = {
+            ltex = {
+              language = "en-GB",
+            },
+          },
+        },
       },
       -- This section directly overrides LazyVim's diagnostic defaults
       diagnostics = {
