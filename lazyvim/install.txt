@@ -21,6 +21,31 @@ export LD_LIBRARY_PATH=$HOME/build/build-rust/install_dir/nightly/lib:$LD_LIBRAR
 gmake install_jsregexp
 15. hg_cmd is missing but can be safely ignored as it is about mercurial
 16. Update latexmk to the latest version
+17. Install gemini-cli
+the api key is here: https://aistudio.google.com/app/api-keys
+18. Install avante.nvim: enable it in the lazyvim plugins. It will produce an error after downloading the sources. cd to .local/share/nvim/lazy/avante.nvim/ and run "cargo build --release --no-default-features --features luajit".Then, inside the avante.nvim folder
+    mkdir build/
+    cd build
+    cp ../target/release/libavante_templates.so avante_templates.so 
+    cp ../target/release/libavante_repo_map.so avante_repo_map.so
+    cp ../target/release/libavante_tokenizers.so avante_tokenizers.so
+    cp ../target/release/libhtml2md.so avante_html2md.so
+Then nvim ~/.local/share/nvim/lazy/avante.nvim/lua/avante/utils/init.lua
+and make sure to include openbsd in the supported OSs, like this: 
+---@return "linux" | "openbsd" | "darwin" | "windows"
+function M.get_os_name()
+  local os_name = vim.uv.os_uname().sysname
+  if os_name == "Linux" or os_name == "OpenBSD" then
+    return "linux"
+  elseif os_name == "Darwin" then
+    return "darwin"
+  elseif os_name == "Windows_NT" then
+    return "windows"
+  else
+    error("Unsupported operating system: " .. os_name)
+  end
+end
+19. Install ltex-ls-plus
 
 Not sure if needed: Prevent Updates from Breaking the Build: By default, when Lazy.nvim updates LuaSnip, it may overwrite the compiled library. To prevent this, ensure your lua/plugins/ configuration explicitly includes the build command so Lazy.nvim re-compiles it automatically after an update:
 {
