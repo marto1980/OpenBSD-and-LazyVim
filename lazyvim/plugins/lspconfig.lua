@@ -49,6 +49,9 @@ return {
                 name = "ltex_plus",
               },
             })
+            -- 3. FORCE the server to reload the config from disk immediately
+            -- This ensures existing words in the dictionary are recognized on open
+            require("ltex_extra").reload()
           end,
           -- Additional settings (optional)
           settings = {
