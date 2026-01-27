@@ -1,20 +1,18 @@
 return {
   "yetone/avante.nvim",
 
-  -- Build function for OpenBSD
+  -- build on OpenBSD safely
   build = function()
     local uname = vim.uv.os_uname().sysname
     local plugin_dir = vim.fn.stdpath("data") .. "/lazy/avante.nvim"
     local makefile = plugin_dir .. "/Makefile"
     local local_makefile = plugin_dir .. "/Makefile.local"
 
-    -- Non-OpenBSD: default build
     if uname ~= "OpenBSD" then
       vim.fn.system("gmake BUILD_FROM_SOURCE=true")
       return
     end
 
-    -- Portable file copy function
     local function copy_file(src, dst)
       local infile = io.open(src, "r")
       if not infile then
@@ -31,68 +29,111 @@ return {
       return true
     end
 
-    -- Copy Makefile to local if it doesn't exist
     if not vim.loop.fs_stat(local_makefile) then
-      local ok = copy_file(makefile, local_makefile)
-      if not ok then
-        error("Failed to copy Makefile -> Makefile.local")
-      end
+      copy_file(makefile, local_makefile)
     end
 
-    -- Patch local Makefile for OpenBSD
     local lines = vim.fn.readfile(local_makefile)
     local patched = {}
-    local already = false
+    local inserted = false
 
     for _, l in ipairs(lines) do
-      table.insert(patched, l)
-      if l:match("^else ifeq %(%$%(UNAME%), Darwin%)") then
-        if not already then
-          table.insert(patched, "else ifeq ($(UNAME), OpenBSD)")
-          table.insert(patched, "\tOS := linux")
-          table.insert(patched, "\tEXT := so")
-          already = true
-        end
+      -- When we reach the generic else, insert OpenBSD *before* it
+      if l:match("^else$") and not inserted then
+        table.insert(patched, "else ifeq ($(UNAME), OpenBSD)")
+        table.insert(patched, "\tOS := linux")
+        table.insert(patched, "\tEXT := so")
+        inserted = true
       end
+
+      table.insert(patched, l)
     end
 
     vim.fn.writefile(patched, local_makefile)
 
-    -- Build using patched Makefile.local
-    vim.fn.system({
-      "sh",
-      "-c",
-      "cd " .. plugin_dir .. " && gmake -f Makefile.local BUILD_FROM_SOURCE=true",
-    })
+    -- build
+    vim.fn.system({ "sh", "-c", "cd " .. plugin_dir .. " && gmake -f Makefile.local BUILD_FROM_SOURCE=true" })
   end,
 
-  -- Avante configuration
+  event = "VeryLazy", -- delay loading
+  version = false, -- always build from source
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "MunifTanjim/nui.nvim",
+    --- The below dependencies are optional,
+    "folke/snacks.nvim", -- for input provider snacks
+    "nvim-tree/nvim-web-devicons",
+  },
+
   config = function(_, opts)
-    -- Patch OS detection in Lua runtime
     local ok, utils = pcall(require, "avante.utils")
     if ok and utils.get_os_name then
       local orig = utils.get_os_name
       utils.get_os_name = function()
-        local os_name = vim.uv.os_uname().sysname
-        if os_name == "OpenBSD" then
-          return "linux" -- treat OpenBSD as Linux
+        if vim.uv.os_uname().sysname == "OpenBSD" then
+          return "linux"
         end
         return orig()
       end
     end
-
     require("avante").setup(opts)
+    -- Safe debug: print OpenRouter models after setup
+    vim.schedule(function()
+      local ok, avante = pcall(require, "avante")
+      if ok and avante.providers and avante.providers.openrouter then
+        print("Avante OpenRouter models loaded:")
+        print(vim.inspect(avante.providers.openrouter.models))
+      else
+        print("OpenRouter provider not ready yet")
+      end
+    end)
   end,
 
-  -- Options
   opts = {
-    provider = "openrouter", -- using OpenRouter ACP
-    acp_providers = {
-      ["openrouter"] = {
-        command = "openrouter",
-        args = { "--model", "default" },
-        env = {}, -- add PATH or other env vars if needed
-      },
+    -- Default starting model
+    provider = "claude-4.5-sonnet",
+    providers = (function()
+      local models = {
+        -- Core generalist / explanation / documentation
+        { "claude-4.5-sonnet", "anthropic/claude-sonnet-4.5" }, -- code refactor / deep reasoning
+        { "claude-4.5-opus", "anthropic/claude-opus-4.5" }, -- documentation & architectural writing
+        -- Strong programming support
+        { "grok-code-fast", "x-ai/grok-code-fast-1" }, -- code completion / autocomplete
+
+        -- Strong generalist baseline
+        { "gpt-4.1", "openai/gpt-4.1" }, -- code refacfor / deep reasoning
+
+        -- Long‑context / tool usage
+        { "gemini-3-flash", "google/gemini-3-flash-preview", { max_tokens = 32768 } }, -- long context editing / large files
+
+        -- Lightweight complement
+        { "claude-4.5-haiku", "anthropic/claude-haiku-4.5" }, -- quick hints / drafts / low cost
+        { "gpt-4o-mini", "openai/gpt-4o-mini" }, -- quick hints / drafts / low cost
+      }
+
+      local providers = {}
+
+      for _, entry in ipairs(models) do
+        local name, model, extra = entry[1], entry[2], entry[3]
+        local provider = {
+          __inherited_from = "openai",
+          endpoint = "https://openrouter.ai/api/v1",
+          api_key_name = "OPENROUTER_API_KEY",
+          model = model,
+        }
+        -- Optional per-model overrides
+        if extra then
+          provider.extra_request_body = extra
+        end
+
+        providers[name] = provider
+      end
+
+      return providers
+    end)(),
+    timeout = 60000, -- 60 seconds
+    extra_request_body = {
+      temperature = 0.7, -- moderate randomness
     },
   },
 }
