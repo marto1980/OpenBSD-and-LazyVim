@@ -102,6 +102,28 @@ return {
     require("avante").setup(opts)
   end,
 
+  keys = {
+    {
+      "<leader>ap",
+      function()
+        local avante_config = require("avante.config")
+        -- Strict check: if it is gemini-cli, go to claude. Otherwise, go to gemini.
+        if avante_config.provider == "gemini-cli" then
+          avante_config.provider = "claude-4.5-sonnet"
+          vim.notify("Avante: Switched to Claude 4.5 Sonnet", vim.log.levels.INFO, { title = "Avante" })
+          avante_config.mode = "legacy" -- Standard chat for Claude
+          vim.notify("Avante: Claude 4.5 Sonnet (Legacy Mode)", vim.log.levels.INFO, { title = "Avante" })
+        else
+          avante_config.provider = "gemini-cli"
+          vim.notify("Avante: Switched to Gemini ACP Agent", vim.log.levels.WARN, { title = "Avante" })
+          avante_config.mode = "agentic" -- Enable agent capabilities for Gemini
+          vim.notify("Avante: Gemini ACP Agent (Agentic Mode)", vim.log.levels.WARN, { title = "Avante" })
+        end
+      end,
+      desc = "Avante: Switch Provider (Claude/Gemini-CLI)",
+    },
+  },
+
   opts = function(_, opts)
     -- Disable agentic mode: use legacy mode for manual approval
     -- opts.mode = "legacy"
