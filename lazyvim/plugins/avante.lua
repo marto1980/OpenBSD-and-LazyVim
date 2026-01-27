@@ -55,13 +55,36 @@ return {
   end,
 
   event = "VeryLazy", -- delay loading
-  version = false, -- always build from source
+  version = false, -- always build from source; -- Never set this value to "*"! Never!
   dependencies = {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
     --- The below dependencies are optional,
     "folke/snacks.nvim", -- for input provider snacks
     "nvim-tree/nvim-web-devicons",
+    {
+      -- support for image pasting
+      "HakonHarnes/img-clip.nvim",
+      event = "VeryLazy",
+      opts = {
+        -- recommended settings
+        default = {
+          embed_image_as_base64 = false,
+          prompt_for_file_name = false,
+          drag_and_drop = {
+            insert_mode = true,
+          },
+        },
+      },
+    },
+    {
+      -- Make sure to set this up properly if you have lazy=true
+      "MeanderingProgrammer/render-markdown.nvim",
+      opts = {
+        file_types = { "markdown", "Avante" },
+      },
+      ft = { "markdown", "Avante" },
+    },
   },
 
   config = function(_, opts)
@@ -85,9 +108,8 @@ return {
 
     opts.behaviour = vim.tbl_extend("force", opts.behaviour or {}, { support_paste_from_clipboard = true })
     opts.timeout = 60000 -- 60 seconds
-    opts.extra_request_body = {
-      temperature = 0.7, -- moderate randomness
-    }
+    local global_extra = { temperature = 0.75 }
+    opts.extra_request_body = global_extra
 
     -- List of models to generate providers dynamically
     local models = {
@@ -120,9 +142,7 @@ return {
       }
 
       -- Merge per-model overrides with global defaults if needed
-      if extra then
-        provider.extra_request_body = extra
-      end
+      provider.extra_request_body = vim.tbl_extend("force", vim.deepcopy(global_extra), extra or {})
       opts.providers[name] = provider
     end
 
