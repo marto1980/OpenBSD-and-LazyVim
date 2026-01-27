@@ -1,2 +1,4 @@
 # Convert tex to UTF8
 iconv -f ISO-8859-1 -t UTF-8 CV_en.tex > CV_en_utf8.tex 
+
+curl "https://openrouter.ai/api/v1/models?include_paid=true" -H "Authorization: Bearer $OPENROUTER_API_KEY" | gvim -
