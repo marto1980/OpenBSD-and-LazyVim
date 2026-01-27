@@ -34,9 +34,7 @@ return {
       copy_file(makefile, local_makefile)
     end
 
-    local lines = vim.fn.readfile(local_makefile)
-    local patched = {}
-    local inserted = false
+    local lines, patched, inserted = vim.fn.readfile(local_makefile), {}, false
 
     for _, l in ipairs(lines) do
       -- When we reach the generic else, insert OpenBSD *before* it
@@ -112,7 +110,6 @@ return {
 
     -- Ensure providers table exists
     opts.providers = opts.providers or {}
-
     for _, entry in ipairs(models) do
       local name, model, extra = entry[1], entry[2], entry[3]
       local provider = {
@@ -126,11 +123,10 @@ return {
       if extra then
         provider.extra_request_body = extra
       end
-
       opts.providers[name] = provider
     end
 
-    -- Override default providers to hide them from the model selector
+    -- Disable unwanted default providers
     local disabled_providers = { "vertex", "vertex_claude" }
     for _, provider_name in ipairs(disabled_providers) do
       opts.providers[provider_name] = {
