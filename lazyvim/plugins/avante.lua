@@ -79,15 +79,6 @@ return {
       end
     end
     require("avante").setup(opts)
-
-    -- Remove unwanted default providers after setup
-    vim.schedule(function()
-      local config_ok, config = pcall(require, "avante.config")
-      if config_ok and config.options and config.options.providers then
-        config.options.providers["vertex"] = nil
-        config.options.providers["vertex_claude"] = nil
-      end
-    end)
   end,
 
   opts = {
