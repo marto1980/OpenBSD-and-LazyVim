@@ -81,70 +81,69 @@ return {
     require("avante").setup(opts)
   end,
 
-  opts = {
+  opts = function(_, opts)
     -- Default starting model
-    provider = "claude-4.5-sonnet",
-    behaviour = {
+    opts.provider = "claude-4.5-sonnet"
+    opts.behaviour = {
       support_paste_from_clipboard = true,
-    },
-    providers = (function()
-      local models = {
-        -- Core generalist / explanation / documentation
-        { "claude-4.5-sonnet", "anthropic/claude-sonnet-4.5" }, -- code refactor / deep reasoning
-        { "claude-4.5-opus", "anthropic/claude-opus-4.5" }, -- documentation & architectural writing
-        -- Strong programming support
-        { "grok-code-fast", "x-ai/grok-code-fast-1" }, -- code completion / autocomplete
+    }
+    opts.timeout = 60000 -- 60 seconds
+    opts.extra_request_body = {
+      temperature = 0.7, -- moderate randomness
+    }
 
-        -- Strong generalist baseline
-        { "gpt-4.1", "openai/gpt-4.1" }, -- code refacfor / deep reasoning
+    -- List of models to generate providers dynamically
+    local models = {
+      -- Core generalist / explanation / documentation
+      { "claude-4.5-sonnet", "anthropic/claude-sonnet-4.5" }, -- code refactor / deep reasoning
+      { "claude-4.5-opus", "anthropic/claude-opus-4.5" }, -- documentation & architectural writing
+      -- Strong programming support
+      { "grok-code-fast", "x-ai/grok-code-fast-1" }, -- code completion / autocomplete
 
-        -- Long‑context / tool usage
-        { "gemini-3-flash", "google/gemini-3-flash-preview", { max_tokens = 32768 } }, -- long context editing / large files
+      -- Strong generalist baseline
+      { "gpt-4.1", "openai/gpt-4.1" }, -- code refactor / deep reasoning
 
-        -- Lightweight complement
-        { "claude-4.5-haiku", "anthropic/claude-haiku-4.5" }, -- quick hints / drafts / low cost
-        { "gpt-4o-mini", "openai/gpt-4o-mini" }, -- quick hints / drafts / low cost
+      -- Long‑context / tool usage
+      { "gemini-3-flash", "google/gemini-3-flash-preview", { max_tokens = 32768 } }, -- long context editing / large files
+
+      -- Lightweight complement
+      { "claude-4.5-haiku", "anthropic/claude-haiku-4.5" }, -- quick hints / drafts / low cost
+      { "gpt-4o-mini", "openai/gpt-4o-mini" }, -- quick hints / drafts / low cost
+    }
+
+    -- Ensure providers table exists
+    opts.providers = opts.providers or {}
+
+    for _, entry in ipairs(models) do
+      local name, model, extra = entry[1], entry[2], entry[3]
+      local provider = {
+        __inherited_from = "openai",
+        endpoint = "https://openrouter.ai/api/v1",
+        api_key_name = "OPENROUTER_API_KEY",
+        model = model,
       }
-
-      local providers = {}
-
-      for _, entry in ipairs(models) do
-        local name, model, extra = entry[1], entry[2], entry[3]
-        local provider = {
-          __inherited_from = "openai",
-          endpoint = "https://openrouter.ai/api/v1",
-          api_key_name = "OPENROUTER_API_KEY",
-          model = model,
-        }
-        -- Optional per-model overrides
-        if extra then
-          provider.extra_request_body = extra
-        end
-
-        providers[name] = provider
+      -- Optional per-model overrides
+      if extra then
+        provider.extra_request_body = extra
       end
 
-      -- Override default providers to hide them from the model selector
-      providers["vertex"] = {
-        __inherited_from = "openai",
-        endpoint = "",
-        api_key_name = "DISABLED",
-        model = "",
-        enabled = false,
-      }
-      providers["vertex_claude"] = {
-        __inherited_from = "openai",
-        endpoint = "",
-        api_key_name = "DISABLED",
-        model = "",
-        enabled = false,
-      }
+      opts.providers[name] = provider
+    end
 
-      return providers
-    end)(),
-    timeout = 60000, -- 60 seconds
-    extra_request_body = {
-      temperature = 0.7, -- moderate randomness
-    },
-  },
+    -- Override default providers to hide them from the model selector
+    opts.providers["vertex"] = {
+      __inherited_from = "openai",
+      endpoint = "",
+      api_key_name = "DISABLED",
+      model = "",
+      enabled = false,
+    }
+    opts.providers["vertex_claude"] = {
+      __inherited_from = "openai",
+      endpoint = "",
+      api_key_name = "DISABLED",
+      model = "",
+      enabled = false,
+    }
+  end,
 }
