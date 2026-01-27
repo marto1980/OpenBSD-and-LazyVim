@@ -104,7 +104,7 @@ return {
 
   opts = function(_, opts)
     -- Disable agentic mode: use legacy mode for manual approval
-    opts.mode = "legacy"
+    -- opts.mode = "legacy"
 
     -- Default starting model
     opts.provider = "claude-4.5-sonnet"
@@ -160,5 +160,16 @@ return {
         enabled = false,
       }
     end
+    -- ✅ Correctly add ACP providers inside opts
+    opts.acp_providers = {
+      ["gemini-cli"] = {
+        command = "gemini",
+        args = { "--experimental-acp" },
+        env = {
+          NODE_NO_WARNINGS = "1",
+          GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
+        },
+      },
+    }
   end,
 }
