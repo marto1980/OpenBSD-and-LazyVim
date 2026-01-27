@@ -84,9 +84,8 @@ return {
   opts = function(_, opts)
     -- Default starting model
     opts.provider = "claude-4.5-sonnet"
-    opts.behaviour = {
-      support_paste_from_clipboard = true,
-    }
+
+    opts.behaviour = vim.tbl_extend("force", opts.behaviour or {}, { support_paste_from_clipboard = true })
     opts.timeout = 60000 -- 60 seconds
     opts.extra_request_body = {
       temperature = 0.7, -- moderate randomness
@@ -122,7 +121,8 @@ return {
         api_key_name = "OPENROUTER_API_KEY",
         model = model,
       }
-      -- Optional per-model overrides
+
+      -- Merge per-model overrides with global defaults if needed
       if extra then
         provider.extra_request_body = extra
       end
