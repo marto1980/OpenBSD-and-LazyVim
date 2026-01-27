@@ -131,19 +131,15 @@ return {
     end
 
     -- Override default providers to hide them from the model selector
-    opts.providers["vertex"] = {
-      __inherited_from = "openai",
-      endpoint = "",
-      api_key_name = "DISABLED",
-      model = "",
-      enabled = false,
-    }
-    opts.providers["vertex_claude"] = {
-      __inherited_from = "openai",
-      endpoint = "",
-      api_key_name = "DISABLED",
-      model = "",
-      enabled = false,
-    }
+    local disabled_providers = { "vertex", "vertex_claude" }
+    for _, provider_name in ipairs(disabled_providers) do
+      opts.providers[provider_name] = {
+        __inherited_from = "openai",
+        endpoint = "",
+        api_key_name = "DISABLED",
+        model = "",
+        enabled = false,
+      }
+    end
   end,
 }
