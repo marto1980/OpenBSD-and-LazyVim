@@ -103,6 +103,9 @@ return {
   end,
 
   opts = function(_, opts)
+    -- Disable agentic mode: use legacy mode for manual approval
+    opts.mode = "legacy"
+
     -- Default starting model
     opts.provider = "claude-4.5-sonnet"
 
