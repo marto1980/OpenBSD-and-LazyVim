@@ -3,6 +3,7 @@ return {
 
   -- build on OpenBSD safely
   build = function()
+    ---@diagnostic disable-next-line: undefined-field
     local uname = vim.uv.os_uname().sysname
     local plugin_dir = vim.fn.stdpath("data") .. "/lazy/avante.nvim"
     local makefile = plugin_dir .. "/Makefile"
@@ -70,6 +71,7 @@ return {
     if ok and utils.get_os_name then
       local orig = utils.get_os_name
       utils.get_os_name = function()
+        ---@diagnostic disable-next-line: undefined-field
         if vim.uv.os_uname().sysname == "OpenBSD" then
           return "linux"
         end
@@ -77,14 +79,13 @@ return {
       end
     end
     require("avante").setup(opts)
-    -- Safe debug: print OpenRouter models after setup
+
+    -- Remove unwanted default providers after setup
     vim.schedule(function()
-      local ok, avante = pcall(require, "avante")
-      if ok and avante.providers and avante.providers.openrouter then
-        print("Avante OpenRouter models loaded:")
-        print(vim.inspect(avante.providers.openrouter.models))
-      else
-        print("OpenRouter provider not ready yet")
+      local config_ok, config = pcall(require, "avante.config")
+      if config_ok and config.options and config.options.providers then
+        config.options.providers["vertex"] = nil
+        config.options.providers["vertex_claude"] = nil
       end
     end)
   end,
@@ -92,6 +93,9 @@ return {
   opts = {
     -- Default starting model
     provider = "claude-4.5-sonnet",
+    behaviour = {
+      support_paste_from_clipboard = true,
+    },
     providers = (function()
       local models = {
         -- Core generalist / explanation / documentation
@@ -128,6 +132,22 @@ return {
 
         providers[name] = provider
       end
+
+      -- Override default providers to hide them from the model selector
+      providers["vertex"] = {
+        __inherited_from = "openai",
+        endpoint = "",
+        api_key_name = "DISABLED",
+        model = "",
+        enabled = false,
+      }
+      providers["vertex_claude"] = {
+        __inherited_from = "openai",
+        endpoint = "",
+        api_key_name = "DISABLED",
+        model = "",
+        enabled = false,
+      }
 
       return providers
     end)(),
