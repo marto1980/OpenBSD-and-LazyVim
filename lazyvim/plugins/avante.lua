@@ -1,15 +1,153 @@
--- Constants
+--[[
+Avante.nvim Configuration
+
+This configuration includes special handling for OpenBSD:
+- OpenBSD is not recognized by the default Makefile
+- We patch the Makefile to treat OpenBSD as Linux
+- We monkey-patch avante.utils.get_os_name to return "linux" on OpenBSD
+
+Architecture:
+- Legacy mode: Traditional completion with manual approval
+- Agentic mode: Autonomous AI agent using ACP (Agentic Code Provider)
+
+Adding new providers:
+1. Add to PROVIDER_CONFIGS below with all metadata
+2. The provider will automatically appear in the picker (<leader>am)
+3. For ACP providers, set is_acp = true
+--]]
+
+-- Build-related constants
 local OPENBSD = "OpenBSD"
 local LINUX_OS = "linux"
 local SO_EXTENSION = "so"
 local MAKEFILE_LOCAL = "Makefile.local"
+
+-- Provider mode constants
 local MODE_LEGACY = "legacy"
 local MODE_AGENTIC = "agentic"
+
+-- API constants
 local OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1"
+
+-- Configuration constants
 local DEFAULT_TIMEOUT_MS = 60000 -- 60 seconds for longer generation tasks
 local DEFAULT_TEMPERATURE = 0.75 -- Balanced between creativity and consistency
+local MAX_TOKENS_LONG_CONTEXT = 32768
 
+-- Provider configurations with complete metadata
+-- This is the single source of truth for all providers
+local PROVIDER_CONFIGS = {
+  -- Core generalist / explanation / documentation
+  {
+    name = "claude-4.5-sonnet",
+    model = "anthropic/claude-sonnet-4.5",
+    desc = "Claude 4.5 Sonnet",
+    mode = MODE_LEGACY,
+    comment = "code refactor / deep reasoning",
+  },
+  {
+    name = "claude-4.5-opus",
+    model = "anthropic/claude-opus-4.5",
+    desc = "Claude 4.5 Opus",
+    mode = MODE_LEGACY,
+    comment = "documentation & architectural writing",
+  },
+  -- ACP (Agentic Code Provider) models
+  {
+    name = "gemini-cli",
+    model = "",
+    desc = "Gemini Auto",
+    mode = MODE_AGENTIC,
+    is_acp = true,
+    comment = "auto-select best model",
+  },
+  {
+    name = "gemini-pro",
+    model = "gemini-3-pro-preview",
+    desc = "Gemini 3 Pro Preview",
+    mode = MODE_AGENTIC,
+    is_acp = true,
+  },
+  {
+    name = "gemini-flash",
+    model = "gemini-3-flash-preview",
+    desc = "Gemini 3 Flash Preview",
+    mode = MODE_AGENTIC,
+    is_acp = true,
+  },
+  -- Strong programming support
+  {
+    name = "grok-code-fast",
+    model = "x-ai/grok-code-fast-1",
+    desc = "Grok Code Fast",
+    mode = MODE_LEGACY,
+    comment = "code completion / autocomplete",
+  },
+  -- Strong generalist baseline
+  {
+    name = "gpt-4.1",
+    model = "openai/gpt-4.1",
+    desc = "GPT-4.1",
+    mode = MODE_LEGACY,
+    comment = "code refactor / deep reasoning",
+  },
+  -- Long-context / tool usage
+  {
+    name = "gemini-3-flash",
+    model = "google/gemini-3-flash-preview",
+    desc = "Gemini 3 Flash",
+    mode = MODE_LEGACY,
+    extra = { max_tokens = MAX_TOKENS_LONG_CONTEXT },
+    comment = "long context editing / large files",
+  },
+  -- Lightweight complement
+  {
+    name = "claude-4.5-haiku",
+    model = "anthropic/claude-haiku-4.5",
+    desc = "Claude 4.5 Haiku",
+    mode = MODE_LEGACY,
+    comment = "quick hints / drafts / low cost",
+  },
+  {
+    name = "gpt-4o-mini",
+    model = "openai/gpt-4o-mini",
+    desc = "GPT-4o Mini",
+    mode = MODE_LEGACY,
+    comment = "quick hints / drafts / low cost",
+  },
+}
 -- Helper Functions
+
+--- Validate that required API keys are set
+--- @return boolean success Whether all required keys are present
+local function validate_api_keys()
+  local keys_to_check = {
+    { name = "OPENROUTER_API_KEY", required = true },
+    { name = "GEMINI_API_KEY", required = false }, -- Only needed for ACP
+  }
+
+  local all_valid = true
+  for _, key in ipairs(keys_to_check) do
+    if not os.getenv(key.name) then
+      local level = key.required and vim.log.levels.WARN or vim.log.levels.INFO
+      vim.notify(string.format("Avante: %s not set", key.name), level, { title = "Avante Configuration" })
+      if key.required then
+        all_valid = false
+      end
+    end
+  end
+  return all_valid
+end
+
+--- Create a disabled provider configuration
+--- @param name string Provider name
+--- @return table provider Disabled provider configuration
+local function disable_provider(name)
+  return {
+    __inherited_from = "openai",
+    enabled = false,
+  }
+end
 
 --- Copy a file from source to destination
 --- @param src string Source file path
@@ -42,7 +180,6 @@ local function patch_makefile_for_openbsd(makefile_path)
   local inserted = false
 
   for _, l in ipairs(lines) do
-    -- When we reach the generic else, insert OpenBSD *before* it
     if l:match("^else$") and not inserted then
       table.insert(patched, "else ifeq ($(UNAME), OpenBSD)")
       table.insert(patched, "\tOS := " .. LINUX_OS)
@@ -50,6 +187,11 @@ local function patch_makefile_for_openbsd(makefile_path)
       inserted = true
     end
     table.insert(patched, l)
+  end
+
+  if not inserted then
+    vim.notify("Warning: Could not find insertion point in Makefile", vim.log.levels.WARN)
+    return false
   end
 
   vim.fn.writefile(patched, makefile_path)
@@ -93,13 +235,12 @@ local function build_for_openbsd(plugin_dir)
 end
 
 --- Create an OpenRouter provider configuration
---- @param name string Provider name
 --- @param model string Model identifier
 --- @param extra table|nil Extra request body parameters
 --- @param global_extra table Global default parameters
 --- @return table provider Provider configuration
 
-local function create_openrouter_provider(name, model, extra, global_extra)
+local function create_openrouter_provider(model, extra, global_extra)
   local provider = {
     __inherited_from = "openai",
     endpoint = OPENROUTER_ENDPOINT,
@@ -113,10 +254,9 @@ local function create_openrouter_provider(name, model, extra, global_extra)
 end
 
 --- Create an ACP (Agentic Code Provider) configuration
---- @param name string Provider name
 --- @param model string Model identifier (empty string for auto)
 --- @return table provider ACP provider configuration
-local function create_acp_provider(name, model)
+local function create_acp_provider(model)
   local args = { "--experimental-acp" }
   if model ~= "" then
     table.insert(args, "--model")
@@ -134,31 +274,20 @@ local function create_acp_provider(name, model)
 end
 
 --- Show provider picker and switch to selected provider
+--- Dynamically generates picker items from PROVIDER_CONFIGS
 local function switch_provider()
   local avante_config = require("avante.config")
   local snacks = require("snacks")
 
-  -- Define all available providers with descriptions
-  local providers = {
-    { name = "claude-4.5-sonnet", desc = "Claude 4.5 Sonnet (Legacy)", mode = MODE_LEGACY },
-    { name = "claude-4.5-opus", desc = "Claude 4.5 Opus (Legacy)", mode = MODE_LEGACY },
-    { name = "gemini-cli", desc = "Gemini Auto (Agentic)", mode = MODE_AGENTIC },
-    { name = "gemini-pro", desc = "Gemini 3 Pro Preview (Agentic)", mode = MODE_AGENTIC },
-    { name = "gemini-flash", desc = "Gemini 3 Flash Preview (Agentic)", mode = MODE_AGENTIC },
-    { name = "grok-code-fast", desc = "Grok Code Fast (Legacy)", mode = MODE_LEGACY },
-    { name = "gpt-4.1", desc = "GPT-4.1 (Legacy)", mode = MODE_LEGACY },
-    { name = "gemini-3-flash", desc = "Gemini 3 Flash (Legacy)", mode = MODE_LEGACY },
-    { name = "claude-4.5-haiku", desc = "Claude 4.5 Haiku (Legacy)", mode = MODE_LEGACY },
-    { name = "gpt-4o-mini", desc = "GPT-4o Mini (Legacy)", mode = MODE_LEGACY },
-  }
-
   -- Format items for the picker with visual indicator for current provider
   local current_provider = avante_config.provider
   local items = {}
-  for _, p in ipairs(providers) do
+
+  for _, p in ipairs(PROVIDER_CONFIGS) do
     local indicator = (p.name == current_provider) and "● " or "  "
+    local mode_label = p.mode == MODE_AGENTIC and "Agentic" or "Legacy"
     table.insert(items, {
-      text = string.format("%s%-25s %s", indicator, p.name, p.desc),
+      text = string.format("%s%-25s %s (%s)", indicator, p.name, p.desc, mode_label),
       provider = p.name,
       mode = p.mode,
     })
@@ -245,6 +374,9 @@ return {
   },
 
   config = function(_, opts)
+    -- Validate required API keys are set
+    validate_api_keys()
+
     -- Monkey-patch avante.utils.get_os_name to report OpenBSD as "linux"
     -- This ensures the plugin uses Linux-compatible binaries on OpenBSD
     local ok, utils = pcall(require, "avante.utils")
@@ -279,59 +411,30 @@ return {
 
     opts.behaviour = vim.tbl_extend("force", opts.behaviour or {}, { support_paste_from_clipboard = true })
     opts.timeout = DEFAULT_TIMEOUT_MS
+
     -- Global request body settings applied to all providers
     -- Temperature controls randomness: 0=deterministic, 1=creative, 0.75=balanced
     local global_extra = { temperature = DEFAULT_TEMPERATURE }
     opts.extra_request_body = global_extra
 
-    -- List of models to generate providers dynamically
-    local models = {
-      -- Core generalist / explanation / documentation
-      { "claude-4.5-sonnet", "anthropic/claude-sonnet-4.5" }, -- code refactor / deep reasoning
-      { "claude-4.5-opus", "anthropic/claude-opus-4.5" }, -- documentation & architectural writing
-      -- Strong programming support
-      { "grok-code-fast", "x-ai/grok-code-fast-1" }, -- code completion / autocomplete
-
-      -- Strong generalist baseline
-      { "gpt-4.1", "openai/gpt-4.1" }, -- code refactor / deep reasoning
-
-      -- Long‑context / tool usage
-      { "gemini-3-flash", "google/gemini-3-flash-preview", { max_tokens = 32768 } }, -- long context editing / large files
-
-      -- Lightweight complement
-      { "claude-4.5-haiku", "anthropic/claude-haiku-4.5" }, -- quick hints / drafts / low cost
-      { "gpt-4o-mini", "openai/gpt-4o-mini" }, -- quick hints / drafts / low cost
-    }
-
-    -- Generate OpenRouter providers dynamically from the models list
+    -- Generate providers dynamically from PROVIDER_CONFIGS
     opts.providers = opts.providers or {}
-    for _, entry in ipairs(models) do
-      local name, model, extra = entry[1], entry[2], entry[3]
-      opts.providers[name] = create_openrouter_provider(name, model, extra, global_extra)
+    opts.acp_providers = opts.acp_providers or {}
+
+    for _, config in ipairs(PROVIDER_CONFIGS) do
+      if config.is_acp then
+        -- ACP (Agentic Code Provider) configuration
+        opts.acp_providers[config.name] = create_acp_provider(config.model)
+      else
+        -- OpenRouter provider configuration
+        opts.providers[config.name] = create_openrouter_provider(config.model, config.extra, global_extra)
+      end
     end
 
-    -- Disable unwanted default providers
+    -- Disable unwanted default providers using helper function
     local disabled_providers = { "vertex", "vertex_claude", "gemini", "anthropic" }
     for _, provider_name in ipairs(disabled_providers) do
-      opts.providers[provider_name] = {
-        __inherited_from = "openai",
-        endpoint = "",
-        api_key_name = "DISABLED",
-        model = "",
-        enabled = false,
-      }
-    end
-
-    -- ✅ Configure add ACP providers
-    local acp_models = {
-      { "gemini-cli", "" },
-      { "gemini-pro", "gemini-3-pro-preview" },
-      { "gemini-flash", "gemini-3-flash-preview" },
-    }
-    opts.acp_providers = opts.acp_providers or {}
-    for _, entry in ipairs(acp_models) do
-      local name, model = entry[1], entry[2]
-      opts.acp_providers[name] = create_acp_provider(name, model)
+      opts.providers[provider_name] = disable_provider(provider_name)
     end
   end,
 }
