@@ -31,6 +31,7 @@ local OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1"
 
 -- Configuration constants
 local DEFAULT_TIMEOUT_MS = 60000 -- 60 seconds for longer generation tasks
+-- Temperature controls randomness: 0=deterministic, 1=creative, 0.75=balanced
 local DEFAULT_TEMPERATURE = 0.75 -- Balanced between creativity and consistency
 local MAX_TOKENS_LONG_CONTEXT = 32768
 
@@ -239,7 +240,6 @@ end
 --- @param extra table|nil Extra request body parameters
 --- @param global_extra table Global default parameters
 --- @return table provider Provider configuration
-
 local function create_openrouter_provider(model, extra, global_extra)
   local provider = {
     __inherited_from = "openai",
@@ -413,7 +413,6 @@ return {
     opts.timeout = DEFAULT_TIMEOUT_MS
 
     -- Global request body settings applied to all providers
-    -- Temperature controls randomness: 0=deterministic, 1=creative, 0.75=balanced
     local global_extra = { temperature = DEFAULT_TEMPERATURE }
     opts.extra_request_body = global_extra
 
