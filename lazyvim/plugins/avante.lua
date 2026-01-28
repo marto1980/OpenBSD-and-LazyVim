@@ -202,7 +202,7 @@ return {
     end
 
     -- Disable unwanted default providers
-    local disabled_providers = { "vertex", "vertex_claude" }
+    local disabled_providers = { "vertex", "vertex_claude", "gemini", "anthropic" }
     for _, provider_name in ipairs(disabled_providers) do
       opts.providers[provider_name] = {
         __inherited_from = "openai",
@@ -212,49 +212,30 @@ return {
         enabled = false,
       }
     end
-    -- ✅ Correctly add ACP providers inside opts
-    -- local acp_models = {
-    --   { "gemini-cli", "" },
-    --   { "gemini-pro", "gemini-3-pro-preview" },
-    --   { "gemini-flash", "gemini-3-flash-preview" },
-    -- }
-    -- for _, entry in ipairs(acp_models) do
-    --   local name, model = entry[1], entry[2]
-    --   opts.acp_providers[name] = {
-    --     command = "gemini",
-    --     args = { "--experimental-acp" },
-    --     env = {
-    --       NODE_NO_WARNINGS = "1",
-    --       GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "--model", model), -- you must set this env variable
-    --     },
-    --   }
-    -- end
 
-    opts.acp_providers = {
-      ["gemini-cli"] = {
-        command = "gemini",
-        args = { "--experimental-acp" },
-        env = {
-          NODE_NO_WARNINGS = "1",
-          GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
-        },
-      },
-      ["gemini-pro"] = {
-        command = "gemini",
-        args = { "--experimental-acp", "--model", "gemini-3-pro-preview" },
-        env = {
-          NODE_NO_WARNINGS = "1",
-          GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
-        },
-      },
-      ["gemini-flash"] = {
-        command = "gemini",
-        args = { "--experimental-acp", "--model", "gemini-3-flash-preview" },
-        env = {
-          NODE_NO_WARNINGS = "1",
-          GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
-        },
-      },
+    -- ✅ Correctly add ACP providers inside opts
+    local acp_models = {
+      { "gemini-cli", "" },
+      { "gemini-pro", "gemini-3-pro-preview" },
+      { "gemini-flash", "gemini-3-flash-preview" },
     }
+    opts.acp_providers = opts.acp_providers or {}
+    for _, entry in ipairs(acp_models) do
+      local name, model = entry[1], entry[2]
+      local args = { "--experimental-acp" }
+      if model ~= "" then
+        table.insert(args, "--model")
+        table.insert(args, model)
+      end
+
+      opts.acp_providers[name] = {
+        command = "gemini",
+        args = args,
+        env = {
+          NODE_NO_WARNINGS = "1",
+          GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
+        },
+      }
+    end
   end,
 }
