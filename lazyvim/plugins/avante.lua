@@ -107,20 +107,50 @@ return {
       "<leader>ap",
       function()
         local avante_config = require("avante.config")
-        -- Strict check: if it is gemini-cli, go to claude. Otherwise, go to gemini.
-        if avante_config.provider == "gemini-cli" then
+        -- If current provider starts with "gemini", switch to Claude. Otherwise, switch to Gemini Auto.
+        if string.find(avante_config.provider, "^gemini") then
           avante_config.provider = "claude-4.5-sonnet"
-          vim.notify("Avante: Switched to Claude 4.5 Sonnet", vim.log.levels.INFO, { title = "Avante" })
-          avante_config.mode = "legacy" -- Standard chat for Claude
-          vim.notify("Avante: Claude 4.5 Sonnet (Legacy Mode)", vim.log.levels.INFO, { title = "Avante" })
+          avante_config.mode = "legacy"
+          vim.notify("Avante: Switched to Claude 4.5 Sonnet (Legacy Mode)", vim.log.levels.INFO, { title = "Avante" })
         else
           avante_config.provider = "gemini-cli"
-          vim.notify("Avante: Switched to Gemini ACP Agent", vim.log.levels.WARN, { title = "Avante" })
-          avante_config.mode = "agentic" -- Enable agent capabilities for Gemini
-          vim.notify("Avante: Gemini ACP Agent (Agentic Mode)", vim.log.levels.WARN, { title = "Avante" })
+          avante_config.mode = "agentic"
+          vim.notify("Avante: Switched to Gemini Auto (Agentic Mode)", vim.log.levels.WARN, { title = "Avante" })
         end
       end,
       desc = "Avante: Switch Provider (Claude/Gemini-CLI)",
+    },
+    {
+      "<leader>ay",
+      function()
+        local avante_config = require("avante.config")
+        if not string.find(avante_config.provider, "^gemini") then
+          vim.notify(
+            "Avante: Current provider is not Gemini. Switch to Gemini first (<leader>ap).",
+            vim.log.levels.ERROR,
+            { title = "Avante" }
+          )
+          return
+        end
+
+        local cycle = {
+          ["gemini-cli"] = "gemini-pro",
+          ["gemini-pro"] = "gemini-flash",
+          ["gemini-flash"] = "gemini-cli",
+        }
+
+        local next_provider = cycle[avante_config.provider] or "gemini-cli"
+        avante_config.provider = next_provider
+
+        local labels = {
+          ["gemini-cli"] = "Gemini Auto (Gemini 3 Preview)",
+          ["gemini-pro"] = "Gemini 3 Pro Preview",
+          ["gemini-flash"] = "Gemini 3 Flash Preview",
+        }
+
+        vim.notify("Avante: Switched to " .. labels[next_provider], vim.log.levels.INFO, { title = "Avante" })
+      end,
+      desc = "Avante: Cycle Gemini ACP Models",
     },
   },
 
@@ -183,10 +213,43 @@ return {
       }
     end
     -- ✅ Correctly add ACP providers inside opts
+    -- local acp_models = {
+    --   { "gemini-cli", "" },
+    --   { "gemini-pro", "gemini-3-pro-preview" },
+    --   { "gemini-flash", "gemini-3-flash-preview" },
+    -- }
+    -- for _, entry in ipairs(acp_models) do
+    --   local name, model = entry[1], entry[2]
+    --   opts.acp_providers[name] = {
+    --     command = "gemini",
+    --     args = { "--experimental-acp" },
+    --     env = {
+    --       NODE_NO_WARNINGS = "1",
+    --       GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "--model", model), -- you must set this env variable
+    --     },
+    --   }
+    -- end
+
     opts.acp_providers = {
       ["gemini-cli"] = {
         command = "gemini",
         args = { "--experimental-acp" },
+        env = {
+          NODE_NO_WARNINGS = "1",
+          GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
+        },
+      },
+      ["gemini-pro"] = {
+        command = "gemini",
+        args = { "--experimental-acp", "--model", "gemini-3-pro-preview" },
+        env = {
+          NODE_NO_WARNINGS = "1",
+          GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
+        },
+      },
+      ["gemini-flash"] = {
+        command = "gemini",
+        args = { "--experimental-acp", "--model", "gemini-3-flash-preview" },
         env = {
           NODE_NO_WARNINGS = "1",
           GEMINI_API_KEY = os.getenv("GEMINI_API_KEY"), -- you must set this env variable
