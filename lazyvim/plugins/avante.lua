@@ -406,7 +406,11 @@ return {
   opts = function(_, opts)
     -- Disable agentic mode: use legacy mode for manual approval
     -- opts.mode = "legacy"
-
+    opts.windows = {
+      input = {
+        height = 16, -- make prompt window higher
+      },
+    }
     -- Default starting model
     opts.provider = "claude-4.5-sonnet"
 
