@@ -117,6 +117,7 @@ local PROVIDER_CONFIGS = {
     comment = "quick hints / drafts / low cost",
   },
 }
+
 -- Helper Functions
 
 --- Validate that required API keys are set
@@ -143,7 +144,7 @@ end
 --- Create a disabled provider configuration
 --- @param name string Provider name
 --- @return table provider Disabled provider configuration
-local function disable_provider(name)
+local function disable_provider()
   return {
     __inherited_from = "openai",
     enabled = false,
@@ -433,7 +434,7 @@ return {
     -- Disable unwanted default providers using helper function
     local disabled_providers = { "vertex", "vertex_claude", "gemini", "anthropic" }
     for _, provider_name in ipairs(disabled_providers) do
-      opts.providers[provider_name] = disable_provider(provider_name)
+      opts.providers[provider_name] = disable_provider()
     end
   end,
 }
