@@ -44,14 +44,14 @@ local PROVIDER_CONFIGS = {
     model = "anthropic/claude-sonnet-4.5",
     desc = "Claude 4.5 Sonnet",
     mode = MODE_LEGACY,
-    comment = "code refactor / deep reasoning",
+    comment = "code refactor / deep reasoning / expensive",
   },
   {
     name = "claude-4.5-opus",
     model = "anthropic/claude-opus-4.5",
     desc = "Claude 4.5 Opus",
     mode = MODE_LEGACY,
-    comment = "documentation & architectural writing",
+    comment = "documentation & architectural writing / expensive",
   },
   -- ACP (Agentic Code Provider) models
   {
@@ -68,6 +68,7 @@ local PROVIDER_CONFIGS = {
     desc = "Gemini 3 Pro Preview",
     mode = MODE_AGENTIC,
     is_acp = true,
+    comment = "autonomous complex refactoring / agentic deep reasoning / expensive",
   },
   {
     name = "gemini-flash",
@@ -75,6 +76,7 @@ local PROVIDER_CONFIGS = {
     desc = "Gemini 3 Flash Preview",
     mode = MODE_AGENTIC,
     is_acp = true,
+    comment = "autonomous quick fixes / fast agentic refactoring / low cost",
   },
   -- Strong programming support
   {
@@ -82,7 +84,7 @@ local PROVIDER_CONFIGS = {
     model = "x-ai/grok-code-fast-1",
     desc = "Grok Code Fast",
     mode = MODE_LEGACY,
-    comment = "code completion / autocomplete",
+    comment = "code completion / autocomplete / very cheap",
   },
   -- Strong generalist baseline
   {
@@ -90,7 +92,7 @@ local PROVIDER_CONFIGS = {
     model = "openai/gpt-4.1",
     desc = "GPT-4.1",
     mode = MODE_LEGACY,
-    comment = "code refactor / deep reasoning",
+    comment = "code refactor / deep reasoning / medium cost",
   },
   -- Long-context / tool usage
   {
@@ -99,7 +101,7 @@ local PROVIDER_CONFIGS = {
     desc = "Gemini 3 Flash",
     mode = MODE_LEGACY,
     extra = { max_tokens = MAX_TOKENS_LONG_CONTEXT },
-    comment = "long context editing / large files",
+    comment = "long context editing / large files / low cost",
   },
   -- Lightweight complement
   {
@@ -114,7 +116,7 @@ local PROVIDER_CONFIGS = {
     model = "openai/gpt-4o-mini",
     desc = "GPT-4o Mini",
     mode = MODE_LEGACY,
-    comment = "quick hints / drafts / low cost",
+    comment = "quick hints / drafts / very cheap",
   },
 }
 
@@ -461,7 +463,7 @@ return {
       },
     }
     -- Default starting model
-    opts.provider = "claude-4.5-sonnet"
+    opts.provider = "gpt-4o-mini"
 
     opts.behaviour = vim.tbl_extend("force", opts.behaviour or {}, { support_paste_from_clipboard = true })
     opts.timeout = DEFAULT_TIMEOUT_MS
