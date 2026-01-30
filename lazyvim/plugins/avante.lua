@@ -276,6 +276,7 @@ end
 
 --- Show provider picker and switch to selected provider
 --- Dynamically generates picker items from PROVIDER_CONFIGS
+--- Shows preview window with mode and comment information
 local function switch_provider()
   local avante_config = require("avante.config")
   local snacks = require("snacks")
@@ -286,21 +287,69 @@ local function switch_provider()
 
   for _, p in ipairs(PROVIDER_CONFIGS) do
     local indicator = (p.name == current_provider) and "● " or "  "
-    local mode_label = p.mode == MODE_AGENTIC and "Agentic" or "Legacy"
+
+    -- Build preview content with provider details
+    local preview_lines = {}
+    table.insert(preview_lines, "# " .. p.name)
+    table.insert(preview_lines, "")
+    table.insert(preview_lines, "**Description:** " .. p.desc)
+    table.insert(preview_lines, "")
+    table.insert(preview_lines, "**Mode:** " .. (p.mode == MODE_AGENTIC and "🤖 Agentic" or "✋ Legacy"))
+    table.insert(preview_lines, "")
+
+    if p.model and p.model ~= "" then
+      table.insert(preview_lines, "**Model:** " .. p.model)
+      table.insert(preview_lines, "")
+    end
+
+    if p.is_acp then
+      table.insert(preview_lines, "**Type:** ACP (Agentic Code Provider)")
+      table.insert(preview_lines, "")
+    end
+
+    if p.comment then
+      table.insert(preview_lines, "**Use Case:**")
+      table.insert(preview_lines, p.comment)
+      table.insert(preview_lines, "")
+    end
+
+    -- Add mode explanation
+    table.insert(preview_lines, "---")
+    table.insert(preview_lines, "")
+    if p.mode == MODE_AGENTIC then
+      table.insert(preview_lines, "**Agentic Mode:**")
+      table.insert(preview_lines, "• Autonomous AI agent using ACP")
+      table.insert(preview_lines, "• Automatically applies changes")
+      table.insert(preview_lines, "• Best for rapid iteration")
+    else
+      table.insert(preview_lines, "**Legacy Mode:**")
+      table.insert(preview_lines, "• Traditional completion flow")
+      table.insert(preview_lines, "• Manual approval required")
+      table.insert(preview_lines, "• More control over changes")
+    end
+
     table.insert(items, {
-      text = string.format("%s%-25s %s (%s)", indicator, p.name, p.desc, mode_label),
+      text = string.format("%s%-30s %s", indicator, p.name, p.desc),
       provider = p.name,
       mode = p.mode,
+      comment = p.comment,
+      model = p.model,
+      is_acp = p.is_acp or false,
+      preview = {
+        text = table.concat(preview_lines, "\n"),
+        ft = "markdown",
+      },
     })
   end
 
-  -- Show picker with correct format
-  snacks.picker.pick({
+  -- Show picker with preview window
+  snacks.picker({
     items = items,
     prompt = "Select Avante Provider",
-    format = "text", -- Use the built-in "text" formatter
+    format = "text",
+    preview = "preview",
     layout = {
-      preset = "select", -- Use select layout which has no preview
+      preset = "default", -- Use default layout which includes preview
     },
     confirm = function(picker, item)
       picker:close()
