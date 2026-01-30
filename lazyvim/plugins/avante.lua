@@ -118,6 +118,21 @@ local PROVIDER_CONFIGS = {
     mode = MODE_LEGACY,
     comment = "quick hints / drafts / very cheap",
   },
+  -- Free models
+  {
+    name = "trinity-large-preview",
+    model = "arcee-ai/trinity-large-preview:free",
+    desc = "Claude 4.5 Haiku",
+    mode = MODE_LEGACY,
+    comment = "creative writing / deep reasoning / very long contexts / free",
+  },
+  {
+    name = "trinity-mini",
+    model = "arcee-ai/trinity-mini:free",
+    desc = "Trinity Mini (free)",
+    mode = MODE_LEGACY,
+    comment = "deep reasoning / long contexts /robust function calling / multi-step agent workflows / free",
+  },
 }
 
 -- Helper Functions
@@ -144,7 +159,6 @@ local function validate_api_keys()
 end
 
 --- Create a disabled provider configuration
---- @param name string Provider name
 --- @return table provider Disabled provider configuration
 local function disable_provider()
   return {
@@ -311,7 +325,9 @@ local function switch_provider()
 
     if p.comment then
       table.insert(preview_lines, "**Use Case:**")
-      table.insert(preview_lines, p.comment)
+      for part in string.gmatch(p.comment, "[^/]+") do
+        table.insert(preview_lines, "• " .. vim.trim(part))
+      end
       table.insert(preview_lines, "")
     end
 
@@ -493,3 +509,4 @@ return {
     end
   end,
 }
+
