@@ -12,6 +12,7 @@ return {
         lua_ls = {
           mason = false,
           cmd = { "/usr/local/bin/lua-language-server" },
+          filetypes = { "lua" },
           settings = {
             Lua = {
               diagnostics = {
@@ -31,6 +32,7 @@ return {
           },
           mason = false,
           cmd = { "/home/marto/.bin/texlab" },
+          filetypes = { "tex" },
           on_attach = function(client, _)
             client.server_capabilities.documentFormattingProvider = false
             client.server_capabilities.documentRangeFormattingProvider = false
@@ -39,7 +41,8 @@ return {
         ltex_plus = {
           mason = false, -- Prevent Mason from trying to install it
           cmd = { "/home/marto/.bin/ltex-ls-plus" },
-          on_attach = function(client, bufnr)
+          filetypes = { "tex", "txt", "markdown" },
+          on_attach = function()
             -- MANUALLY load and setup the extra plugin here
             -- This ensures it ONLY uses your existing ltex_plus client
             require("ltex_extra").setup({

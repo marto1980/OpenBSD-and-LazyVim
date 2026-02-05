@@ -122,7 +122,7 @@ local PROVIDER_CONFIGS = {
   {
     name = "trinity-large-preview",
     model = "arcee-ai/trinity-large-preview:free",
-    desc = "Claude 4.5 Haiku",
+    desc = "Trinity Large Preview (free)",
     mode = MODE_LEGACY,
     comment = "creative writing / deep reasoning / very long contexts / free",
   },
@@ -509,4 +509,3 @@ return {
     end
   end,
 }
-
