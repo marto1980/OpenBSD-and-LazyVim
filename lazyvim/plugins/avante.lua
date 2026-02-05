@@ -479,7 +479,7 @@ return {
       },
     }
     -- Default starting model
-    opts.provider = "gpt-4o-mini"
+    opts.provider = "trinity-large-preview"
 
     opts.behaviour = vim.tbl_extend("force", opts.behaviour or {}, { support_paste_from_clipboard = true })
     opts.timeout = DEFAULT_TIMEOUT_MS
