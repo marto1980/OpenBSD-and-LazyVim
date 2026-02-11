@@ -4,9 +4,30 @@
 4. Install ast-grep
 5. Install a latex formatter such as latexindent? tex-fmt
 6. Make mason forget about the failed installs of shfmt and stylua
-7. Install rust nightly: https://www.openbsd-desktop.rocks/posts/update-rust/, https://github.com/semarie/build-rust
+7. Install rust nightly:
+ 7.1 Look at this manual: https://www.openbsd-desktop.rocks/posts/update-rust/
+ 7.2 Clone the build repo as documented here: https://github.com/semarie/build-rust
+
+To find the rust date you can use the find-archives.sh script, available in the manual above, beforehand commenting out the actual downloads to prevent downloading unnecessary files. You can check the specific rust version by visiting the page for the respective date that the find-archives.sh script outputs, e.g. https://static.rust-lang.org/dist/2025-12-22 and checking the channel-rust- files.
+Make sure to provide the correct environment variables in the ~/.build_rust.conf file, as described in the 7.1 manual, e.g:
+
+-----------------------------------------------------------------------------------------------
+SUDO=doas
+# The URL where to download the rustc source code packaged for building
+# Note: there is no slash at the end
+distfiles_rustc_base="https://static.rust-lang.org/dist/2025-12-22"
+# The Rust compiler used to compile the other Rust version will be used
+# from there. /usr/local is the path to use when using the default Rust
+# installed using pkg_add(1).
+# Once you built a Rust version (e.g. at /path/to/build-rust/install_dir/current),
+# use the new path in rust_base_dir to use the new Rust version to compile another
+# one.
+rust_base_dir=/home/marto/build/build-rust/install_dir/nightly
+
+----------------------------------------------------------------------------------------------
 export PATH=$HOME/build/build-rust/install_dir/nightly/bin:$PATH
 export LD_LIBRARY_PATH=$HOME/build/build-rust/install_dir/nightly/lib:$LD_LIBRARY_PATH
+
 8. enable snacks.scroll, snacks.words, snacks.image and snacks.picker
 9. luasnip WARNING For Variable/Placeholder-transformations, luasnip requires
       the jsregexp library. See `:help |luasnip-lsp-snippets-transformations`| for advice
