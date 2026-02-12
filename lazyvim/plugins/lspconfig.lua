@@ -7,6 +7,27 @@ return {
         ltex = function()
           return true
         end, -- Block LazyVim from launching 'ltex-ls'
+        jsonls = function(_, opts)
+          local schemastore = require("schemastore")
+
+          opts.settings = {
+            json = {
+              schemaStore = {
+                enable = true,
+              },
+              schemas = vim.list_extend({
+                {
+                  description = "TypeScript configuration",
+                  fileMatch = {
+                    "tsconfig.json",
+                    "tsconfig.*.json",
+                  },
+                  url = "https://json.schemastore.org/tsconfig.json",
+                },
+              }, schemastore.json.schemas()),
+            },
+          }
+        end,
       },
       servers = {
         lua_ls = {
