@@ -7,6 +7,10 @@ return {
       local home = os.getenv("HOME")
       local jdtls_base = home .. "/build/jdt-language-server"
       local launcher_jar = vim.fn.glob(jdtls_base .. "/plugins/org.eclipse.equinox.launcher_*.jar")
+      if launcher_jar == "" then
+        vim.notify("JDTLS launcher jar not found", vim.log.levels.ERROR)
+        return
+      end
       local config_dir = jdtls_base .. "/config_linux"
       -- Root detection
       local root_dir = vim.fs.root(0, { "gradlew", ".git", "mvnw", "pom.xml", "build.gradle" })
@@ -14,7 +18,7 @@ return {
         return
       end
       -- Project-specific workspace
-      local project_name = vim.fn.fnamemodify(root_dir, ":p:h:t")
+      local project_name = vim.fn.fnamemodify(root_dir, ":t")
       local workspace_dir = home .. "/.cache/jdtls/workspace/" .. project_name
 
       -- We manually define the full cmd here to satisfy LazyVim's expectations
