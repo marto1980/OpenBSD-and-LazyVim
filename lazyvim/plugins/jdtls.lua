@@ -1,7 +1,6 @@
 return {
   {
     "mfussenegger/nvim-jdtls",
-    ft = "java",
     opts = function(_, opts)
       -- Base paths
       local home = os.getenv("HOME")
@@ -22,7 +21,10 @@ return {
       local workspace_dir = home .. "/.cache/jdtls/workspace/" .. project_name
 
       -- We manually define the full cmd here to satisfy LazyVim's expectations
+      -- See `:help vim.lsp.start` for an overview of the supported `config` options.
       opts.jdtls = {
+        name = "jdtls",
+        -- `cmd` defines the executable to launch eclipse.jdt.ls.
         cmd = {
           "/usr/local/jdk-25/bin/java",
           "-Declipse.application=org.eclipse.jdt.ls.core.id1",
@@ -43,7 +45,12 @@ return {
           "-data",
           workspace_dir,
         },
+        -- `root_dir` must point to the root of your project.
+        -- See `:help vim.fs.root`
         root_dir = root_dir,
+        -- Here you can configure eclipse.jdt.ls specific settings
+        -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+        -- for a list of options
         settings = {
           java = {
             configuration = {
@@ -64,7 +71,13 @@ return {
             },
           },
         },
-        -- for debug support at a later stage
+        -- This sets the `initializationOptions` sent to the language server
+        -- If you plan on using additional eclipse.jdt.ls plugins like java-debug
+        -- you'll need to set the `bundles`
+        --
+        -- See https://codeberg.org/mfussenegger/nvim-jdtls#java-debug-installation
+        --
+        -- If you don't plan on any eclipse.jdt.ls plugins you can remove this
         init_options = {
           bundles = {},
         },
