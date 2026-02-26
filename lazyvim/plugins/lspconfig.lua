@@ -84,6 +84,7 @@ return {
             },
           },
         },
+        jdtls = { mason = false },
       },
       -- This section directly overrides LazyVim's diagnostic defaults
       diagnostics = {
