@@ -5,7 +5,6 @@ return {
       local home = os.getenv("HOME")
       local jdtls_base = home .. "/build/jdt-language-server"
       local launcher_jar = vim.fn.glob(jdtls_base .. "/plugins/org.eclipse.equinox.launcher_*.jar")
-
       if launcher_jar == "" then
         vim.notify("JDTLS launcher jar not found", vim.log.levels.ERROR)
         return opts
@@ -22,7 +21,7 @@ return {
         end
 
         local project_name = existing_opts.project_name(root_dir)
-        local workspace_dir = home .. "/.cache/jdtls/workspace/" .. project_name
+        local workspace_dir = existing_opts.jdtls_workspace_dir(project_name)
 
         return {
           "/usr/local/jdk-25/bin/java",
@@ -46,27 +45,24 @@ return {
       end
 
       -- Extend (not replace) existing settings
-      opts.settings = vim.tbl_deep_extend("force", opts.settings or {}, {
-        java = {
-          configuration = {
-            runtimes = {
-              {
-                name = "JavaSE-17",
-                path = "/usr/local/jdk-17",
-              },
-              {
-                name = "JavaSE-21",
-                path = "/usr/local/jdk-21",
-              },
-              {
-                name = "JavaSE-25",
-                path = "/usr/local/jdk-25",
-              },
-            },
+      opts.settings = opts.settings or {}
+      opts.settings.java = opts.settings.java or {}
+      opts.settings.java.configuration = vim.tbl_deep_extend("force", opts.settings.java.configuration or {}, {
+        runtimes = {
+          {
+            name = "JavaSE-17",
+            path = "/usr/local/jdk-17",
+          },
+          {
+            name = "JavaSE-21",
+            path = "/usr/local/jdk-21",
+          },
+          {
+            name = "JavaSE-25",
+            path = "/usr/local/jdk-25",
           },
         },
       })
-
       return opts
     end,
   },
