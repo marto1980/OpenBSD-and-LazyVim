@@ -1,0 +1,20 @@
+{
+  "Eclipse Boilerplate Class": {
+    "prefix": "pclass",
+    "description": "Create a Java class with a project placeholder and Main stub",
+    "body": [
+      "package com.marto.${1:<project-name>};",
+      "",
+      "/**",
+      " * @author marto",
+      " */",
+      "public class ${TM_FILENAME_BASE} {",
+      "",
+      "\tpublic static void main(String[] args) {",
+      "\t\t// TODO Auto-generated method stub",
+      "\t\t$0",
+      "\t}",
+      "}"
+    ]
+  }
+}
