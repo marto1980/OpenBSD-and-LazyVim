@@ -8,7 +8,7 @@ return {
     "nvim-lua/plenary.nvim",
     "lewis6991/gitsigns.nvim", -- recommended for Connected Mode / SCM info
   },
-  ft = { "typescript", "javascript", "html", "css", "scss" },
+  ft = { "typescript", "javascript", "html", "css", "scss", "java" },
   config = function()
     -- Make sure mason is initialized somewhere in your setup:
     -- require("mason").setup()
@@ -25,10 +25,11 @@ return {
           vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjs.jar"), -- JS/TS rules
           vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarhtml.jar"), -- JSX/HTML rules
           vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcss.jar"), -- CSS-in-JS, style files, etc.
+          vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjava.jar"),
         },
         settings = {
           sonarlint = {
-            pathToNode = "/user/local/bin/node",
+            pathToNode = "/usr/local/bin/node",
             -- javascript = { node = { maxspace = 8192 } }, -- Increase heap for Angular/large files
             -- Optional example settings; tweak to your needs
             -- rules = {
@@ -62,6 +63,7 @@ return {
         "html",
         "css",
         "scss",
+        "java",
       },
     })
   end,
