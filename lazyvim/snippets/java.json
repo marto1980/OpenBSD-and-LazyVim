@@ -16,5 +16,19 @@
       "\t}",
       "}"
     ]
+  },
+  "Eclipse Boilerplate Class No Main": {
+    "prefix": "nclass",
+    "description": "Java class + Package (No Main)",
+    "body": [
+      "package com.marto.${1:<project-name>};",
+      "",
+      "/**",
+      " * @author marto",
+      " */",
+      "public class ${TM_FILENAME_BASE} {",
+      "\t$0",
+      "}"
+    ]
   }
 }
