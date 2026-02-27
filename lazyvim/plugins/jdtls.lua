@@ -9,8 +9,13 @@ return {
         vim.notify("JDTLS launcher jar not found", vim.log.levels.ERROR)
         return opts
       end
-
       local config_dir = jdtls_base .. "/config_linux"
+
+      opts.root_dir = function(path)
+        -- Custom markers: Priority on pom.xml to ignore the overarching .git
+        local custom_markers = { "pom.xml", "mvnw", "gradlew", ".git" }
+        return vim.fs.root(path, custom_markers)
+      end
 
       -- Override how the full command is built
       opts.full_cmd = function(existing_opts)

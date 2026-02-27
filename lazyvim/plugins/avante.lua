@@ -64,8 +64,8 @@ local PROVIDER_CONFIGS = {
   },
   {
     name = "gemini-pro",
-    model = "gemini-3-pro-preview",
-    desc = "Gemini 3 Pro Preview",
+    model = "gemini-3.1-pro-preview",
+    desc = "Gemini 3.1 Pro Preview",
     mode = MODE_AGENTIC,
     is_acp = true,
     comment = "autonomous complex refactoring / agentic deep reasoning / expensive",
