@@ -52,22 +52,14 @@ return {
       -- Extend (not replace) existing settings
       opts.settings = opts.settings or {}
       opts.settings.java = opts.settings.java or {}
-      opts.settings.java.configuration = vim.tbl_deep_extend("force", opts.settings.java.configuration or {}, {
-        runtimes = {
-          {
-            name = "JavaSE-17",
-            path = "/usr/local/jdk-17",
-          },
-          {
-            name = "JavaSE-21",
-            path = "/usr/local/jdk-21",
-          },
-          {
-            name = "JavaSE-25",
-            path = "/usr/local/jdk-25",
-          },
-        },
+      opts.settings.java.configuration = opts.settings.java.configuration or {}
+      -- This specifically merges JUST the runtimes list
+      opts.settings.java.configuration.runtimes = vim.list_extend(opts.settings.java.configuration.runtimes or {}, {
+        { name = "JavaSE-17", path = "/usr/local/jdk-17" },
+        { name = "JavaSE-21", path = "/usr/local/jdk-21" },
+        { name = "JavaSE-25", path = "/usr/local/jdk-25" },
       })
+
       return opts
     end,
   },
