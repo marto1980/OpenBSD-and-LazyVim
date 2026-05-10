@@ -88,3 +88,18 @@ Useful plugins (apart from the obvious ones):
 13. ui.treesitter-context: Shows current function/class at top. Very useful.
 
 14. util.project: Project management. Useful.
+
+Mason: make sure the following are installed (some get automatically installed after installing the respective lazy plugins in the Lazy Dashboard of LazyVim):
+angular-language-server
+checkstyle
+eslint-lsp
+google-java-format
+java-debug-adapter
+java-test
+js-debug-adapter
+json-lsp
+oxfmt
+prettier
+sonarlint-language-server
+vtsls
+yaml-language-server
