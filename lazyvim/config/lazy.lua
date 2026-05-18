@@ -50,5 +50,5 @@ require("lazy").setup({
       },
     },
   },
-  concurrency = 4,
+  concurrency = 55,
 })
