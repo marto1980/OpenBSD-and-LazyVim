@@ -52,7 +52,7 @@ return {
             },
           },
           mason = false,
-          cmd = { "/home/marto/.bin/texlab" },
+          cmd = { "/home/marto/.cargo/bin/texlab" },
           filetypes = { "tex" },
           on_attach = function(client, _)
             client.server_capabilities.documentFormattingProvider = false
@@ -85,6 +85,7 @@ return {
           },
         },
         jdtls = { mason = false },
+        marksman = { mason = false },
       },
       -- This section directly overrides LazyVim's diagnostic defaults
       diagnostics = {
