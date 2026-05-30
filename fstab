@@ -1,0 +1,7 @@
+8d70e2de136c6ac9.b none swap sw
+8d70e2de136c6ac9.a / ffs rw 1 1
+8d70e2de136c6ac9.h /home ffs rw,nodev,nosuid 1 2
+8d70e2de136c6ac9.g /tmp ffs rw,nodev,nosuid 1 2
+8d70e2de136c6ac9.d /usr ffs rw,nodev 1 2
+8d70e2de136c6ac9.e /usr/local ffs rw,wxallowed,nodev 1 2
+8d70e2de136c6ac9.f /var ffs rw,nodev,nosuid 1 2
