@@ -15,5 +15,20 @@ return {
         ui_select = true, -- This specifically hooks into vim.ui.select
       },
     },
+    keys = {
+      -- Keep your existing default Snacks keymaps here...
+
+      -- ADD THIS: Shortcut to browse your local Maven .m2 dependencies via Snacks
+      {
+        "<leader>Mm",
+        function()
+          Snacks.picker.files({
+            title = "Local Maven Repository (.m2)",
+            cwd = vim.fn.expand("~/.m2/repository"),
+          })
+        end,
+        desc = "Browse Local .m2 Dependencies",
+      },
+    },
   },
 }
