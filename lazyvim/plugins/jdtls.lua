@@ -60,6 +60,24 @@ return {
         { name = "JavaSE-25", path = "/usr/local/jdk-25" },
       })
 
+      -- Add favoriteStaticMembers for auto-completion of static imports
+      opts.settings.java.completion = vim.tbl_deep_extend("force", opts.settings.java.completion or {}, {
+        favoriteStaticMembers = {
+          "org.junit.jupiter.api.Assertions.*",
+          "org.mockito.Mockito.*",
+          "org.mockito.ArgumentMatchers.*",
+          "org.assertj.core.api.Assertions.*",
+        },
+        filteredTypes = {
+          "com.sun.*",
+          "io.micrometer.shaded.*",
+          "java.awt.*",
+          "jdk.*",
+          "sun.*",
+        },
+        guessMethodArguments = true,
+      })
+
       return opts
     end,
   },
