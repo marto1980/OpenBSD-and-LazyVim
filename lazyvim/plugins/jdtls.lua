@@ -53,6 +53,18 @@ return {
       opts.settings = opts.settings or {}
       opts.settings.java = opts.settings.java or {}
       opts.settings.java.configuration = opts.settings.java.configuration or {}
+
+      -- Ensure build configurations are updated automatically
+      opts.settings.java.configuration.updateBuildConfiguration = "automatic"
+
+      -- Enable Gradle import and wrapper support
+      opts.settings.java.import = vim.tbl_deep_extend("force", opts.settings.java.import or {}, {
+        gradle = {
+          enabled = true,
+          wrapper = { enabled = true },
+        },
+      })
+
       -- This specifically merges JUST the runtimes list
       opts.settings.java.configuration.runtimes = vim.list_extend(opts.settings.java.configuration.runtimes or {}, {
         { name = "JavaSE-17", path = "/usr/local/jdk-17" },
