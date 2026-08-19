@@ -1,0 +1,124 @@
+1. Packet Filter Firewall IntegrationEnsure your /etc/pf.conf allows the inbound proxy link to pass seamlessly over the virtual bridge network without hitting uninitialized filter states:
+
+textset skip on tap0
+pass in on tap0 proto tcp from 100.64.1.3 to 100.64.1.2 port 11025
+
+Apply the rule changes immediately:
+
+tmuxdoas pfctl -f /etc/pf.conf
+
+2. Deactivate the Host System-Level DaemonTo prevent the early boot system service (_sndio) from locking up the primary hardware device before your desktop session initializes, completely disable it:
+
+doas rcctl disable sndiod
+doas rcctl stop sndiod
+
+3. Deploy the Orchestration Script
+Create the deployment file under your user binaries directory:
+
+mkdir -p /home/marto/.bin
+vi /home/marto/.bin/start_chrome.sh
+Paste this exact content:
+
+#!/bin/sh
+# 1. Force the local X11 display context back to the UNIX domain socket on reboot
+export DISPLAY=:0.0
+
+VM_STATUS=$(doas vmctl status debian-worker | grep running)
+if [ -z "$VM_STATUS" ]; then
+    doas vmctl start debian-worker
+    echo "Waiting for guest network to answer ping..."
+    while ! ping -c 1 -w 1 100.64.1.3 >/dev/null 2>&1; do
+        sleep 1
+    done
+fi
+
+# 2. Synchronize cookie keys to the guest to prevent authentication drift
+scp /home/marto/.sndio/cookie debian@100.64.1.3:/home/debian/.sndio/cookie >/dev/null 2>&1
+ssh debian@100.64.1.3 "chmod 600 /home/debian/.sndio/cookie"
+
+# 3. Tear down the restricted global system daemon and any hanging listeners
+doas rcctl stop sndiod >/dev/null 2>&1
+doas pkill -9 sndiod >/dev/null 2>&1
+pkill -9 sndiod >/dev/null 2>&1
+
+# 4. CRITICAL FIX: Launch the host daemon under YOUR user profile (marto) 
+# to inherit direct hardware session rights automatically on reboot
+sndiod -a off -L 100.64.1.2 -L - >/dev/null 2>&1 &
+sleep 2
+
+xhost +127.0.0.1 >/dev/null; xhost +100.64.1.3 >/dev/null
+
+# Direct driver target to completely bypass card 0 fallbacks inside Chrome's sandbox
+CHROME_FLAGS="--no-sandbox --disable-gpu --disable-software-rasterizer --disable-features=AudioServiceSandbox --alsa-output-device=sndio --start-maximized --window-size=1920,1080"
+
+# 5. Vaporize old guest runtimes and stale socket lockfiles via POSIX pkill
+ssh debian@100.64.1.3 "pkill -9 google-chrome google-chrome-stable sndiod 2>/dev/null; rm -rf ~/.config/google-chrome/SingletonLock ~/.config/google-chrome/SingletonCookie /tmp/sndio-*"
+sleep 1
+
+# 6. Spawn the user proxy cleanly on the guest
+ssh debian@100.64.1.3 "sndiod -a off -f snd@100.64.1.2/0 >/dev/null 2>&1 &"
+
+# 7. Polling Loop: Block execution until the guest socket file is physically created
+echo "Waiting for guest audio socket to initialize..."
+M_RETRY=0
+while ! ssh debian@100.64.1.3 "ls -la /tmp/sndio-*/sock0" >/dev/null 2>&1; do
+    sleep 1
+    M_RETRY=$((M_RETRY + 1))
+    if [ $M_RETRY -gt 15 ]; then
+        echo "Error: Guest sndiod proxy failed to create an active socket interface."
+        exit 1
+    fi
+done
+echo "Audio socket active and verified."
+
+# 8. Execute Chrome safely via SSH X11 forwarding
+ssh -X debian@100.64.1.3 "google-chrome $CHROME_FLAGS"
+
+Make the automation script executable:
+
+chmod +x /home/marto/.bin/start_chrome.sh
+
+Part 2: Debian 13 (Trixie) Guest Configuration
+1. Remove Systemd Background Interferences
+Prevent systemd from running root-level audio daemons that hoard ports and crash on early boot transitions before the virtual network stabilizes:
+# as root execute these:
+systemctl stop sndiod
+systemctl disable sndiod
+systemctl mask sndiod
+
+2. Enable User Session Lingering
+Force the guest OS to preserve the unprivileged debian user context, its runtime directories (/run/user/1000), and user groups alive on headless boots before an interactive SSH login occurs:
+# execute as root:
+loginctl enable-linger debian
+
+3. Bulletproof System ALSA Layer
+Completely overwrite or create /etc/asound.conf to tie your default system configuration to the native sndio type, bypassing deceptive card index lookups (card index for 0 errors) inside multi-process web engines:
+# execute as root:
+vi /etc/asound.conf
+Paste this layout:
+
+pcm.!default {
+    type sndio
+}
+
+ctl.!default {
+    type sndio
+}
+
+pcm.sndio {
+    type sndio
+}
+
+ctl.sndio {
+    type sndio
+}
+
+4. Initialize Profile Subdirectories
+Ensure the directory structure for your profile authentication token exists:
+mkdir -p /home/debian/.sndio
+
+Verifying Your Fresh Deployment
+Once the host laptop reboots, log into your local graphical desktop environment as marto. Open a terminal, and execute the master wrapper script:
+
+/home/marto/.bin/start_chrome.sh
+
