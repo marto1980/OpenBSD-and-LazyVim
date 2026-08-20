@@ -1,0 +1,135 @@
+TUTORIAL: Headless Linux Workspace with Audio & DRM over OpenBSD vmd/vmm
+
+This document provides a clean, step-by-step blueprint to reproduce your fully functional, multimedia-capable development sandbox from scratch on a fresh OpenBSD installation.
+
+STEP 1: Configure Host Networking and PermissionsBy default, OpenBSD isolates guest virtual networks. We must explicitly enable routing, configure Network Address Translation (NAT), and grant local shortcut permissions.
+
+A. Enable IP Forwarding
+
+Run these commands to permit the OpenBSD kernel to route packets between the virtual switch and your physical Wi-Fi/Ethernet interface:
+
+doas sysctl net.inet.ip.forwarding=1
+echo "net.inet.ip.forwarding=1" | doas tee -a /etc/sysctl.conf
+
+B. Configure /etc/pf.confEdit your firewall configurations to manage internal addresses and allow incoming guest audio packages:
+
+doas vi /etc/pf.conf
+
+Ensure your configuration file contains the following lines (NAT must precede filtering rules):
+# Translation Rules
+match out on egress from 100.64.0.0/10 to any nat-to (egress)
+
+# Filter Policy
+block return    # default block stateless traffic
+pass            # establish keep-state
+
+# Direct Sound Engine Network Openings
+pass in proto tcp from 100.64.0.0/10 to any port 11025
+
+Reload your runtime firewall tables:
+
+doas pfctl -f /etc/pf.conf
+
+C. Grant Shortcut Permissions via /etc/doas.conf
+
+To allow your desktop shortcut launcher to spin up the hypervisor subsystem silently without stopping to prompt for passwords, add this authorization handle:
+doas vi /etc/doas.conf
+Append this line:
+
+permit nopass marto as root cmd vmctl
+
+STEP 2: Configure and Activate the OpenBSD Audio Server
+
+OpenBSD’s sound daemon (sndiod) must be explicitly structured to listen globally for internal proxy streams while disabling access cookie validation profiles for the virtual network subnets.
+
+doas rcctl set sndiod flags "-a off -L -"
+doas rcctl enable sndiod
+doas rcctl restart sndiod
+
+(Verify it reports a clean sndiod(ok) state).
+To ensure your desktop shell user account (marto) and incoming network tunnels can pass audio frames smoothly, enable full duplex tracking:
+
+doas sysctl kern.audio.record=1
+echo "kern.audio.record=1" | doas tee -a /etc/sysctl.conf
+
+STEP 3: Configure the vmd Hypervisor Layout
+Define the virtual machine identity, resource constraints, and storage paths.
+doas vi /etc/vm.conf
+Paste this clean production profile:textvm "debian-worker" {
+    memory 4G
+    disk "/var/vm/disk.qcow2"
+    local interface
+    disable
+}
+.Note: The disable directive keeps the virtual machine turned completely off during laptop power cycles to preserve battery.
+
+Activate and start the virtualization service engine:
+
+doas rcctl enable vmd
+doas rcctl restart vmd
+
+STEP 4: Setup Storage Media & Resolve the Serial Console Stalling Quirk
+
+Because standard Linux installation ISO files are optimized for graphical hardware, loading a standard installer ISO directly inside OpenBSD’s text-only headless terminal will instantly freeze the terminal or drop the connection ([EOT]) when it attempts to initialize a video framebuffer.To bypass this input lock, we must force the boot sector into a dedicated Serial Console Help Mode.
+
+A. Download the Standard Netinst ISO
+
+Download a standard Debian Netinst ISO through your local host web browser and save it to your home directory, then place it inside the virtualization space:
+
+doas mkdir -p /var/vm
+doas mv /home/marto/Downloads/debian-13.*-netinst.iso /var/vm/debian-standard.iso
+
+B. Create an Empty Virtual Hard Disk ImageInitialize a clean 30GB storage sandbox space:
+
+doas vmctl create -s 30G /var/vm/disk.qcow2
+
+C. Fire Up the Interactive Setup Engine
+
+Execute the installer block cleanly into terminal memory:
+
+doas vmctl start -m 4G -L -i 1 -c -r /var/vm/debian-standard.iso -d /var/vm/disk.qcow2 debian-worker
+
+D. The Critical Boot Resolution Input (Bypass the Stall)
+
+As soon as the text-based boot selection menu flashes on your terminal screen, do not hit Enter.Immediately type h (for Help) and hit Enter. At the help index command line prompt, type exactly:
+
+textinstall console=ttyS0,115200
+
+Press Enter.
+
+Explanation: This sequence instructs the kernel to drop video hardware initialization routines entirely. It forces the entire installation runtime flow to stream raw, un-composited text strings straight through your open OpenBSD console screen, bypassing input freezing completely.
+
+STEP 5: Complete the Text Installation WizardInside the interactive setup flow, configure the system properties exactly as follows:
+Hostname: debian-worker
+Domain name: Leave completely blank.
+Username Configuration: Type debian.
+Passwords: Declare your chosen administrative root and standard user credentials.
+Partitioning Manager: Select Guided - use entire disk, select your target disk allocation layout, and select All files in one partition. Commit the choices by selecting Finish partitioning and write changes to disk -> Yes.
+Package Manager Mirror: Scan additional media? Select No. Choose a local mirror region (e.g., Bulgaria), and select deb.debian.org. Leave HTTP proxy fields completely blank.
+
+Software Selection Checklist: Use your Spacebar to uncheck any Desktop Environments (like GNOME or XFCE). This keeps the system minimal, headless, and fast. Check SSH server and Check standard system utilities.
+
+Bootloader Placement: When asked if it is safe to install the GRUB bootloader to your primary drive, select <Yes>. On the subsequent selection sub-menu, choose the device node labeled /dev/vda.
+
+Once the success message loads, select <Continue>. The system will cleanly wrap up. Terminate your dead console line by pressing Enter and typing ~..
+
+STEP 6: Deploy Docker, Chrome, and the Native Sndio ProxyNow, boot your clean Debian environment natively in the background and configure the system packages over a secure network bridge.
+
+A. Turn on the Guest Instanceshdoas vmctl start debian-worker
+
+B. Log in Natively via Internal SSH Bridgeshssh debian@100.64.1.3
+(If the connection times out, query your active leases via
+
+doas vmctl status
+
+to find if the system is resting at 100.64.1.2 or 100.64.2.3).
+
+C. Switch to Administrative Root Access
+
+su -
+
+D. Install Software Packages and Media Drivers
+
+apt update
+apt install -y curl wget xauth dbus docker.io docker-compose libasound2-plugins libsndio*
+

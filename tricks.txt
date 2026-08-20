@@ -7,3 +7,6 @@ xzcat rustc-1.93.0-src.tar.xz | tar xf - -C .
 curl "https://openrouter.ai/api/v1/models?include_paid=true" -H "Authorization: Bearer $OPENROUTER_API_KEY" | gvim -
 
 jimage list $JAVA_HOME/lib/modules | grep java/lang | gvim -
+
+
+
